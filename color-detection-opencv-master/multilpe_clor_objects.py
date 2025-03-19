@@ -59,7 +59,7 @@ while(1):
     # Reading the video from the 
     # webcam in image frames 
     #_, imageFrame = webcam.read() 
-    imageFrame = cv2.imread("Pics/photo.jpg") #Multiple_obj.jpg Blue_pen.jpg pic_4.jpg
+    imageFrame = cv2.imread("Pics/square_tray_not_all_blue.jpg") #photo.jpg") #Multiple_obj.jpg Blue_pen.jpg pic_4.jpg
 
     # Convert the imageFrame in 
     # BGR(RGB color space) to 
@@ -148,7 +148,7 @@ while(1):
                                         cv2.CHAIN_APPROX_SIMPLE) 
     for pic, contour in enumerate(contours): 
         area = cv2.contourArea(contour) 
-        if(5000 > area > 4000):     #300
+        if(5000 > area > 1000):     #300
             num_objs_small +=1
             x, y, w, h = cv2.boundingRect(contour) 
             imageFrame = cv2.rectangle(imageFrame, (x, y), 
@@ -237,6 +237,7 @@ while(1):
     print("Number of large objects:", num_objs_large)
 
     # Program Termination 
+    # cv2.namedWindow(800,400)
     cv2.imshow("Multiple Color Detection in Real-TIme", imageFrame) 
     if cv2.waitKey(0): #(10) & 0xFF == ord('q'): 
         #webcam.release() 

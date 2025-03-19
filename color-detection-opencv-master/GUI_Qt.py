@@ -1,0 +1,258 @@
+import sys
+from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QVBoxLayout, QLabel
+import numpy as np 
+import cv2 
+
+# Global variable to store the file path
+selected_file_path = ""
+
+class FileDialogApp(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('File Dialog Example')
+        self.setFixedSize(300, 300)  # Set the size of the main window
+
+        # Create buttons
+        self.open_button = QPushButton('Open File Dialog', self)
+        self.open_button.clicked.connect(self.open_file_dialog)
+
+        self.cancel_button = QPushButton('Cancel', self)
+        self.cancel_button.clicked.connect(self.close_app)
+
+        # Set the layout
+        layout = QVBoxLayout()
+        layout.addWidget(self.open_button)
+        layout.addWidget(self.cancel_button)
+
+        self.setLayout(layout)
+
+    def open_file_dialog(self):
+        global selected_file_path  # Declare the global variable
+        
+        # Create the file dialog
+        dialog = QFileDialog(self)
+        dialog.setWindowTitle("Select a File")
+
+        # Open the dialog
+        dialog.setDirectory("")
+        dialog.setNameFilter("All Files (*);;Text Files (*.txt)")
+
+        if dialog.exec() == QFileDialog.DialogCode.Accepted:
+            selected_file_path = dialog.selectedFiles()[0]  # Get the selected file path
+            print(selected_file_path)
+            self.close()  # Close the GUI
+            another_function()  # Call another function
+        else:
+            print("No file selected.")
+
+    def close_app(self):
+        self.close()  # Close the application
+
+
+def another_function():
+    global selected_file_path
+    if selected_file_path:
+        print(f"Using the file path in another function: {selected_file_path}")
+        #########
+        # Start a while loop 
+        while(1): 
+            
+            # Reading the video from the 
+            # webcam in image frames 
+            #_, imageFrame = webcam.read() 
+            imageFrame = cv2.imread(selected_file_path) # "Pics/photo.jpg") #Multiple_obj.jpg Blue_pen.jpg pic_4.jpg
+
+            # Convert the imageFrame in 
+            # BGR(RGB color space) to 
+            # HSV(hue-saturation-value) 
+            # color space 
+            hsvFrame = cv2.cvtColor(imageFrame, cv2.COLOR_BGR2HSV) 
+
+            # Set range for red color and 
+            # define mask 
+            red_lower = np.array([136, 87, 111], np.uint8) 
+            red_upper = np.array([180, 255, 255], np.uint8) 
+            red_mask = cv2.inRange(hsvFrame, red_lower, red_upper) 
+
+            # Set range for green color and 
+            # define mask 
+            green_lower = np.array([25, 52, 72], np.uint8) 
+            green_upper = np.array([102, 255, 255], np.uint8) 
+            green_mask = cv2.inRange(hsvFrame, green_lower, green_upper) 
+
+            # Set range for blue color and 
+            # define mask 
+            blue_lower = np.array([94, 80, 2], np.uint8) 
+            blue_upper = np.array([120, 255, 255], np.uint8) 
+            blue_mask = cv2.inRange(hsvFrame, blue_lower, blue_upper) 
+            
+            # Morphological Transform, Dilation 
+            # for each color and bitwise_and operator 
+            # between imageFrame and mask determines 
+            # to detect only that particular color 
+            kernel = np.ones((5, 5), "uint8") 
+            
+            # For red color 
+            red_mask = cv2.dilate(red_mask, kernel)
+            res_red = cv2.bitwise_and(imageFrame, imageFrame, 
+                                    mask = red_mask) 
+            
+            # For green color 
+            green_mask = cv2.dilate(green_mask, kernel) 
+            res_green = cv2.bitwise_and(imageFrame, imageFrame, 
+                                        mask = green_mask) 
+            
+            # For blue color 
+            blue_mask = cv2.dilate(blue_mask, kernel) 
+            res_blue = cv2.bitwise_and(imageFrame, imageFrame, 
+                                    mask = blue_mask) 
+
+            # Creating contour to track red color 
+            """ contours, hierarchy = cv2.findContours(red_mask, 
+                                                cv2.RETR_TREE, 
+                                                cv2.CHAIN_APPROX_SIMPLE) 
+            
+            for pic, contour in enumerate(contours): 
+                area = cv2.contourArea(contour) 
+                if(area > 300): 
+                    x, y, w, h = cv2.boundingRect(contour) 
+                    imageFrame = cv2.rectangle(imageFrame, (x, y), 
+                                            (x + w, y + h), 
+                                            (0, 0, 255), 2) 
+                    
+                    cv2.putText(imageFrame, "Red Colour", (x, y), 
+                                cv2.FONT_HERSHEY_SIMPLEX, 1.0, 
+                                (0, 0, 255)) """     
+
+            # Creating contour to track green color 
+            """ contours, hierarchy = cv2.findContours(green_mask, 
+                                                cv2.RETR_TREE, 
+                                                cv2.CHAIN_APPROX_SIMPLE) 
+            
+            for pic, contour in enumerate(contours): 
+                area = cv2.contourArea(contour) 
+                if(area > 300): 
+                    x, y, w, h = cv2.boundingRect(contour) 
+                    imageFrame = cv2.rectangle(imageFrame, (x, y), 
+                                            (x + w, y + h), 
+                                            (0, 255, 0), 2) 
+                    
+                    cv2.putText(imageFrame, "Green Colour", (x, y), 
+                                cv2.FONT_HERSHEY_SIMPLEX, 
+                                1.0, (0, 255, 0)) """ 
+
+            # Creating contour to track blue color 
+            num_objs_small = 0
+            num_objs_large = 0
+            contours, hierarchy = cv2.findContours(blue_mask, 
+                                                cv2.RETR_TREE, 
+                                                cv2.CHAIN_APPROX_SIMPLE) 
+            for pic, contour in enumerate(contours): 
+                area = cv2.contourArea(contour) 
+                if(5000 > area > 4000):     #300
+                    num_objs_small +=1
+                    x, y, w, h = cv2.boundingRect(contour) 
+                    imageFrame = cv2.rectangle(imageFrame, (x, y), 
+                                            (x + w, y + h), 
+                                            (255, 0, 0), 2) 
+                    # calculate coordinates of the center point of each contour cx, cy
+                    M = cv2.moments(contour)
+                    cx = int(M['m10']/M['m00'])
+                    cy = int(M['m01']/M['m00'])
+                    colorsB = imageFrame[cy,cx,0]
+                    colorsG = imageFrame[cy,cx,1]
+                    colorsR = imageFrame[cy,cx,2]
+                    colors = imageFrame[cy,cx,]
+                    hsv_value = np.uint8([[[colorsB ,colorsG,colorsR ]]])
+                    hsv = cv2.cvtColor(hsv_value,cv2.COLOR_BGR2HSV)
+                    # Access individual HSV values
+                    # Access the Hue channel
+                    hue_channel = hsv[:, :, 0]
+
+                    # Access the Saturation channel
+                    saturation_channel = hsv[:, :, 1]
+
+                    # Access the Value channel
+                    value_channel = hsv[:, :, 2]
+                    print("Hue:", hue_channel)
+                    print("Saturation:", saturation_channel)
+                    print("Value:", value_channel)
+                    temp = hue_channel[0,0]/3 # + saturation_channel[0,0]        #int(value_channel[0])
+                    temp1 = saturation_channel[0,0]/3
+                    temp2 = value_channel[0,0]/3
+                    tempp = float(temp + temp1 + temp2)
+                    #mea_value = f"{(hsv):.3f}"  #+avg_hsv[1]+avg_hsv[2]           
+                    cv2.putText(imageFrame, f"{(tempp):.3f}", (x, y), #"Blue Colour" mea_value str(x)str(hsv)
+                                cv2.FONT_HERSHEY_SIMPLEX, 
+                                1.0, (0, 255, 0)) 
+                    print ("HSV : " ,hsv)
+                    print("Coordinates of pixel: X: ",x,"Y: ",y)
+                    """temp = hue_channel[0,0]/3 # + saturation_channel[0,0]        #int(value_channel[0])
+                    temp1 = saturation_channel[0,0]/3
+                    temp2 = value_channel[0,0]/3
+                    tempp = float(temp + temp1 + temp2) """
+                    print(f"{tempp}")
+                    
+                    #print(f"{temp1}")
+                elif (area > 6000):
+                    num_objs_large +=1
+                    x, y, w, h = cv2.boundingRect(contour) 
+                    imageFrame = cv2.rectangle(imageFrame, (x, y), 
+                                            (x + w, y + h), 
+                                            (255, 0, 0), 2) 
+                    # calculate coordinates of the center point of each contour cx, cy
+                    M = cv2.moments(contour)
+                    cx = int(M['m10']/M['m00'])
+                    cy = int(M['m01']/M['m00'])
+                    colorsB = imageFrame[cy,cx,0]
+                    colorsG = imageFrame[cy,cx,1]
+                    colorsR = imageFrame[cy,cx,2]
+                    colors = imageFrame[cy,cx,]
+                    hsv_value = np.uint8([[[colorsB ,colorsG,colorsR ]]])
+                    hsv = cv2.cvtColor(hsv_value,cv2.COLOR_BGR2HSV)
+                    # Access individual HSV values
+                    # Access the Hue channel
+                    hue_channel = hsv[:, :, 0]
+
+                    # Access the Saturation channel
+                    saturation_channel = hsv[:, :, 1]
+
+                    # Access the Value channel
+                    value_channel = hsv[:, :, 2]
+                    print("Hue:", hue_channel)
+                    print("Saturation:", saturation_channel)
+                    print("Value:", value_channel)
+                    temp = hue_channel[0,0]/3 # + saturation_channel[0,0]        #int(value_channel[0])
+                    temp1 = saturation_channel[0,0]/3
+                    temp2 = value_channel[0,0]/3
+                    tempp = float(temp + temp1 + temp2)
+                    #mea_value = f"{(hsv):.3f}"  #+avg_hsv[1]+avg_hsv[2]           
+                    cv2.putText(imageFrame, f"{(tempp):.3f}", (x, y), #"Blue Colour" mea_value str(x)str(hsv)
+                                cv2.FONT_HERSHEY_SIMPLEX, 
+                                1.0, (0, 255, 0)) 
+                    print ("HSV : " ,hsv)
+                    print("Coordinates of pixel: X: ",x,"Y: ",y)
+
+            print("Number of all objects:", num_objs_small + num_objs_large)
+            print("Number of small objects:", num_objs_small)
+            print("Number of large objects:", num_objs_large)
+
+            # Program Termination 
+            # cv2.namedWindow(800,400)
+            cv2.imshow("Multiple Color Detection in Real-TIme", imageFrame) 
+            if cv2.waitKey(0): #(10) & 0xFF == ord('q'): 
+                #webcam.release() 
+                cv2.destroyAllWindows() 
+                break
+                #########
+    else:
+        print("No file path selected.")
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = FileDialogApp()
+    window.show()
+    sys.exit(app.exec())
