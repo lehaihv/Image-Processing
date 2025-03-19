@@ -115,10 +115,3 @@ cv2.imshow('New Background', new_image)
 cv2.waitKey(0)
 cv2.destroyAllWindows() """
 
-from rembg import remove
-from PIL import Image
-input_path = 'Pics/pic_5.jpg'
-output_path = 'out_put.png'
-input = Image.open(input_path)
-output = remove(input)
-output.save(output_path)

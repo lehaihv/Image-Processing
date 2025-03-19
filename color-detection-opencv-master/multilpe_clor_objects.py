@@ -4,6 +4,51 @@
 import numpy as np 
 import cv2 
 
+###
+""" import sys
+from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QVBoxLayout, QLabel
+
+g_flie_path = ''
+
+class FileDialogApp(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('File Dialog Example')
+
+        # Create a button
+        self.button = QPushButton('Open File Dialog', self)
+        self.button.clicked.connect(self.open_file_dialog)
+
+        # Create a label to display the file path
+        self.label = QLabel('Selected file path will appear here', self)
+
+        # Set the layout
+        layout = QVBoxLayout()
+        layout.addWidget(self.button)
+        layout.addWidget(self.label)
+
+        self.setLayout(layout)
+
+    def open_file_dialog(self):
+        # Use QFileDialog.getOpenFileName directly
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select a File", "", "All Files (*);;Text Files (*.txt)")
+        
+        if file_path:
+            self.label.setText(file_path)
+            print(file_path)
+            g_flie_path = file_path
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = FileDialogApp()
+    window.show()
+    sys.exit(app.exec())
+####
+ """
 
 # Capturing video through webcam 
 #webcam = cv2.VideoCapture(0) 
@@ -14,7 +59,7 @@ while(1):
     # Reading the video from the 
     # webcam in image frames 
     #_, imageFrame = webcam.read() 
-    imageFrame = cv2.imread("Pics/square_tray_not_all_blue.jpg") #Multiple_obj.jpg Blue_pen.jpg pic_4.jpg
+    imageFrame = cv2.imread("Pics/photo.jpg") #Multiple_obj.jpg Blue_pen.jpg pic_4.jpg
 
     # Convert the imageFrame in 
     # BGR(RGB color space) to 
@@ -96,14 +141,15 @@ while(1):
                         1.0, (0, 255, 0)) """ 
 
     # Creating contour to track blue color 
-    num_objs = 0
+    num_objs_small = 0
+    num_objs_large = 0
     contours, hierarchy = cv2.findContours(blue_mask, 
                                         cv2.RETR_TREE, 
                                         cv2.CHAIN_APPROX_SIMPLE) 
     for pic, contour in enumerate(contours): 
         area = cv2.contourArea(contour) 
-        if(10000 > area > 1000):     #300
-            num_objs +=1
+        if(5000 > area > 4000):     #300
+            num_objs_small +=1
             x, y, w, h = cv2.boundingRect(contour) 
             imageFrame = cv2.rectangle(imageFrame, (x, y), 
                                     (x + w, y + h), 
@@ -147,8 +193,49 @@ while(1):
             print(f"{tempp}")
             
             #print(f"{temp1}")
+        elif (area > 6000):
+            num_objs_large +=1
+            x, y, w, h = cv2.boundingRect(contour) 
+            imageFrame = cv2.rectangle(imageFrame, (x, y), 
+                                    (x + w, y + h), 
+                                    (255, 0, 0), 2) 
+            # calculate coordinates of the center point of each contour cx, cy
+            M = cv2.moments(contour)
+            cx = int(M['m10']/M['m00'])
+            cy = int(M['m01']/M['m00'])
+            colorsB = imageFrame[cy,cx,0]
+            colorsG = imageFrame[cy,cx,1]
+            colorsR = imageFrame[cy,cx,2]
+            colors = imageFrame[cy,cx,]
+            hsv_value = np.uint8([[[colorsB ,colorsG,colorsR ]]])
+            hsv = cv2.cvtColor(hsv_value,cv2.COLOR_BGR2HSV)
+            # Access individual HSV values
+            # Access the Hue channel
+            hue_channel = hsv[:, :, 0]
 
-    print("Number of objects:", num_objs)        
+            # Access the Saturation channel
+            saturation_channel = hsv[:, :, 1]
+
+            # Access the Value channel
+            value_channel = hsv[:, :, 2]
+            print("Hue:", hue_channel)
+            print("Saturation:", saturation_channel)
+            print("Value:", value_channel)
+            temp = hue_channel[0,0]/3 # + saturation_channel[0,0]        #int(value_channel[0])
+            temp1 = saturation_channel[0,0]/3
+            temp2 = value_channel[0,0]/3
+            tempp = float(temp + temp1 + temp2)
+            #mea_value = f"{(hsv):.3f}"  #+avg_hsv[1]+avg_hsv[2]           
+            cv2.putText(imageFrame, f"{(tempp):.3f}", (x, y), #"Blue Colour" mea_value str(x)str(hsv)
+                        cv2.FONT_HERSHEY_SIMPLEX, 
+                        1.0, (0, 255, 0)) 
+            print ("HSV : " ,hsv)
+            print("Coordinates of pixel: X: ",x,"Y: ",y)
+
+    print("Number of all objects:", num_objs_small + num_objs_large)
+    print("Number of small objects:", num_objs_small)
+    print("Number of large objects:", num_objs_large)
+
     # Program Termination 
     cv2.imshow("Multiple Color Detection in Real-TIme", imageFrame) 
     if cv2.waitKey(0): #(10) & 0xFF == ord('q'): 

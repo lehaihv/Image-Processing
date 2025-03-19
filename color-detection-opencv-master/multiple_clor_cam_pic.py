@@ -7,6 +7,39 @@ import cv2
 
 # Capturing video through webcam 
 #webcam = cv2.VideoCapture(0) 
+#########
+# Open the default camera
+cam = cv2.VideoCapture(0)
+
+""" # Get the default frame width and height
+frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+# Define the codec and create VideoWriter object
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+out = cv2.VideoWriter('output.mp4', fourcc, 20.0, (frame_width, frame_height)) """
+
+while True:
+    ret, frame = cam.read()
+
+    # Write the frame to the output file
+    # out.write(frame)
+
+    # Display the captured frame
+    cv2.imshow('Camera', frame)
+
+    # Press 'q' to exit the loop
+    if cv2.waitKey(1) == ord('q'):
+        # take image and save 
+        # saving image in local storage 
+        cv2.imwrite("Pics/GeeksForGeeks.png", frame) 
+        break
+
+# Release the capture and writer objects
+cam.release()
+#out.release()
+cv2.destroyAllWindows()
+#######
 
 # Start a while loop 
 while(1): 
@@ -14,7 +47,7 @@ while(1):
     # Reading the video from the 
     # webcam in image frames 
     #_, imageFrame = webcam.read() 
-    imageFrame = cv2.imread("Pics/square_tray_not_all_blue.jpg") #Multiple_obj.jpg Blue_pen.jpg pic_4.jpg
+    imageFrame = cv2.imread("Pics/GeeksForGeeks.png") #Multiple_obj.jpg Blue_pen.jpg pic_4.jpg
 
     # Convert the imageFrame in 
     # BGR(RGB color space) to 
@@ -102,7 +135,7 @@ while(1):
                                         cv2.CHAIN_APPROX_SIMPLE) 
     for pic, contour in enumerate(contours): 
         area = cv2.contourArea(contour) 
-        if(10000 > area > 1000):     #300
+        if(4000 > area > 1000):     #300
             num_objs +=1
             x, y, w, h = cv2.boundingRect(contour) 
             imageFrame = cv2.rectangle(imageFrame, (x, y), 
