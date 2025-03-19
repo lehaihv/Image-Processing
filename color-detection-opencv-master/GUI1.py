@@ -21,7 +21,7 @@ class FileDialogApp(QWidget):
         self.open_button = QPushButton('Open Image File', self)
         self.open_button.clicked.connect(self.open_file_dialog)
 
-        self.cancel_button = QPushButton('Cancel', self)
+        self.cancel_button = QPushButton('Exit', self)
         self.cancel_button.clicked.connect(self.close_app)
 
         # Create a label to display the image
