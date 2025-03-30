@@ -45,6 +45,8 @@ class FileDialogApp(QWidget):
 
     def open_file_dialog(self):
         global selected_file_path  # Declare the global variable
+        # Clear the text box before loading a new image
+        self.file_path_text_edit.clear()
         
         # Create the file dialog
         dialog = QFileDialog(self)
