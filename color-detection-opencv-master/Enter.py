@@ -46,7 +46,7 @@ class ImageProcessor(QWidget):
         self.setFixedSize(width, height)
 
     def open_image(self):
-        file_name, _ = QFileDialog.getOpenFileName(self, "Open Image File", "", "Images (*.png *.xpm *.jpg)")
+        file_name, _ = QFileDialog.getOpenFileName(self, "Open Image File", "", "Images (*.png *.xpm *.jpg *.jpeg *.bmp)")
         if file_name:
             self.process_image(file_name)
 
