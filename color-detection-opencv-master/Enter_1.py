@@ -74,8 +74,11 @@ class ImageProcessor(QWidget):
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
         # Adjusted threshold to include light blue
-        lower_blue = np.array([90, 60, 50])
-        upper_blue = np.array([140, 255, 255])
+        lower_blue = np.array([40, 40, 40]) #np.array([90, 60, 50])
+        upper_blue = np.array([80, 255, 255]) #np.array([140, 255, 255])
+
+        #lower_green = np.array([40, 40, 40])
+        #upper_green = np.array([80, 255, 255])
 
         mask = cv2.inRange(hsv, lower_blue, upper_blue)
 
