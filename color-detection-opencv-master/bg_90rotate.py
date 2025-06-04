@@ -11,7 +11,7 @@ def remove_background(input_path, output_path):
         input_image = Image.open(input_path)
 
         # Rotate 90 degrees clockwise
-        rotated_image = input_image.rotate(-90, expand=True)
+        rotated_image = input_image.rotate(90, expand=True) #-90
 
         # Remove background
         output_image = remove(rotated_image, session=session, bgcolor=[128, 128, 128, 255])
@@ -29,6 +29,6 @@ def remove_background(input_path, output_path):
         traceback.print_exc()
 
 if __name__ == '__main__':
-    input_image_path = "Pics/BG/25.jpg"
-    output_image_path = "Pics/BG/252.png"
+    input_image_path = "Pics/BG/1/1.jpg"
+    output_image_path = "Pics/BG/1/1a.png"
     remove_background(input_image_path, output_image_path)

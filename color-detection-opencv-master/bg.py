@@ -22,7 +22,7 @@ def remove_background(input_path, output_path):
 
 
 if __name__ == '__main__':
-    input_image_path = "Pics/BG/24.jpg"  # Replace with your image path
-    output_image_path = "Pics/BG/242.png" # Replace with your desired output path
+    input_image_path = "Pics/BG/29.jpg"  # Replace with your image path
+    output_image_path = "Pics/BG/292.png" # Replace with your desired output path
 
     remove_background(input_image_path, output_image_path)
