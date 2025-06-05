@@ -81,7 +81,7 @@ class ImageProcessor(QWidget):
         upper_blue = np.array([114, 255, 255]) """
 
         lower_blue = np.array([90, 200, 180])
-        upper_blue = np.array([135, 255, 255])   # upper H: 120 to 130
+        upper_blue = np.array([130, 255, 255])   # upper H: 120 to 150
 
         """ lower_blue = np.array([90, 30, 180])    np.array([H,S,V])
         Hue(H)	        =100	The color type (blue hues start ~90)	            0 to 179
