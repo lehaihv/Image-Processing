@@ -15,14 +15,14 @@ class ImageProcessor(QWidget):
         self.exit_button = QPushButton("Exit", self)
 
         # Set button widths
-        self.open_button.setFixedWidth(250)  # Set width of open button to 250
-        self.exit_button.setFixedWidth(50)    # Set width of exit button to 50
+        self.open_button.setFixedWidth(250)
+        self.exit_button.setFixedWidth(50)
 
         self.open_button.clicked.connect(self.open_image)
         self.exit_button.clicked.connect(self.close)
 
         layout = QVBoxLayout()
-        
+
         # Maximize the image box
         self.image_label.setScaledContents(True)
         layout.addWidget(self.image_label)
@@ -37,7 +37,7 @@ class ImageProcessor(QWidget):
 
         layout.addLayout(button_layout)
         self.setLayout(layout)
-        self.setWindowTitle("Blue Object Detector")
+        self.setWindowTitle("Light Blue Object Detector")
 
         # Set window size to 3/4 of screen size
         screen = QApplication.primaryScreen().availableGeometry()
@@ -56,67 +56,32 @@ class ImageProcessor(QWidget):
             print("Error: Could not open image.")
             return
 
-        # Convert image to HSV color space
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-        # Define range of blue color in HSV
-        """ lower_blue = np.array([100, 150, 0])
-        upper_blue = np.array([140, 255, 255]) """
-
-        lower_blue = np.array([90, 30, 180])    # Lower saturation, high brightness
-        upper_blue = np.array([110, 180, 255])
-
-        # Threshold the HSV image to get only blue colors
+        # Detect light blue color only
+        lower_blue = np.array([90, 30, 200])
+        upper_blue = np.array([110, 120, 255])
         mask = cv2.inRange(hsv, lower_blue, upper_blue)
 
-        # Find contours
-        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # Morphological filtering to reduce noise
+        kernel = np.ones((3, 3), np.uint8)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         dimensions = []
-        count_large = 0
-        count_medium = 0
-        count_small = 0
-
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area > 500:  # Filter contours by minimum area
+            if area > 100:
                 x, y, w, h = cv2.boundingRect(cnt)
                 cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                blue_intensity = np.mean(image[y:y + h, x:x + w, 0])  # Blue channel
+                dimensions.append(f"Object at ({x}, {y}) - W: {w}, H: {h}, Area: {area}, Blue Intensity: {blue_intensity:.2f}")
 
-                # Calculate average blue intensity in the bounding box
-                blue_intensity = np.mean(image[y:y + h, x:x + w, 0])  # Blue channel is index 0
-                
-                # Classify object based on area
-                if area > 25000:
-                    size_category = "Large"
-                    count_large += 1
-                elif area > 5000:  # Updated medium object area threshold
-                    size_category = "Medium"
-                    count_medium += 1
-                else:
-                    size_category = "Small"
-                    count_small += 1
-
-                dimensions.append(f"Object at ({x}, {y}) - W: {w}, H: {h}, Area: {area}, Blue Intensity: {blue_intensity:.2f}, Size: {size_category}")
-        
-        # Display the image
         self.display_image(image)
-
-        # Show dimensions and counts in the text box
-        total_objects = count_large + count_medium + count_small
-        summary = (f"Total Objects: {total_objects}\n"
-                   f"Large Objects: {count_large}\n"
-                   f"Medium Objects: {count_medium}\n"
-                   f"Small Objects: {count_small}\n")
-        
         self.text_box.clear()
         self.text_box.append("\n".join(dimensions))
-        self.text_box.append(summary)
-
-        # Print to terminal
-        for dimension in dimensions:
-            print(dimension)
-        print(summary)
+        self.text_box.append(f"Total Light Blue Objects: {len(dimensions)}")
 
     def display_image(self, image):
         height, width, channel = image.shape

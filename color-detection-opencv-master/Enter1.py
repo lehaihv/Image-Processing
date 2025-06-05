@@ -75,8 +75,18 @@ class ImageProcessor(QWidget):
             return
 
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        lower_blue = np.array([100, 150, 0])
-        upper_blue = np.array([140, 255, 255])
+        """ lower_blue = np.array([100, 150, 180])
+        upper_blue = np.array([114, 255, 255]) """
+
+        lower_blue = np.array([90, 200, 180])
+        upper_blue = np.array([130, 255, 255])
+
+        """ lower_blue = np.array([90, 30, 180])    np.array([H,S,V])
+        Hue(H)	        =100	The color type (blue hues start ~90)	            0 to 179
+        Saturation(S)	=150	Color intensity or purity (higher is more vivid)	0 to 255
+        Value(V)	    =180	Brightness level (0 = black, 255 = full bright)	    0 to 255
+
+        """
         mask = cv2.inRange(hsv, lower_blue, upper_blue)
 
         kernel = np.ones((5, 5), np.uint8)

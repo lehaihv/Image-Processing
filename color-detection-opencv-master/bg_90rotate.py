@@ -29,6 +29,6 @@ def remove_background(input_path, output_path):
         traceback.print_exc()
 
 if __name__ == '__main__':
-    input_image_path = "Pics/BG/1/1.jpg"
-    output_image_path = "Pics/BG/1/1a.png"
+    input_image_path = "Pics/BG/1/2.jpg"
+    output_image_path = "Pics/BG/1/2a.png"
     remove_background(input_image_path, output_image_path)
