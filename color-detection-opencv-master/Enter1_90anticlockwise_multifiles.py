@@ -3,35 +3,41 @@ import cv2
 import numpy as np
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QPushButton,
-    QVBoxLayout, QHBoxLayout, QTextEdit, QFileDialog
+    QVBoxLayout, QHBoxLayout, QTextEdit, QFileDialog, QScrollArea, QGridLayout, QSizePolicy
 )
 from PyQt6.QtGui import QImage, QPixmap
 from PyQt6.QtCore import Qt
-
 
 class ImageProcessor(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.image_label = QLabel(self)
         self.text_box = QTextEdit(self)
-        self.open_button = QPushButton("Open Image", self)
-        self.save_button = QPushButton("Save Image", self)
+        self.open_button = QPushButton("Open Images", self)
+        self.save_button = QPushButton("Save Last Image", self)
         self.exit_button = QPushButton("Exit", self)
 
-        self.annotated_image = None
+        self.annotated_images = []  # Store all annotated images
+        self.image_labels = []      # Store QLabel widgets for images
 
         # Set button widths
         self.open_button.setFixedWidth(250)
         self.save_button.setFixedWidth(150)
         self.exit_button.setFixedWidth(50)
 
-        self.open_button.clicked.connect(self.open_image)
+        self.open_button.clicked.connect(self.open_images)
         self.save_button.clicked.connect(self.save_image)
         self.exit_button.clicked.connect(self.close)
 
         layout = QVBoxLayout()
-        layout.addWidget(self.image_label)
+
+        # Scroll area for images
+        self.scroll_area = QScrollArea(self)
+        self.scroll_widget = QWidget()
+        self.grid_layout = QGridLayout(self.scroll_widget)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setWidget(self.scroll_widget)
+        layout.addWidget(self.scroll_area)
 
         self.text_box.setFixedHeight(100)
         layout.addWidget(self.text_box)
@@ -43,7 +49,7 @@ class ImageProcessor(QWidget):
         layout.addLayout(button_layout)
 
         self.setLayout(layout)
-        self.setWindowTitle("Blue Object Detector")
+        self.setWindowTitle("Blue Object Detector - Multiple Images")
 
         # Set window size to 3/4 of screen size
         screen = QApplication.primaryScreen().availableGeometry()
@@ -51,44 +57,55 @@ class ImageProcessor(QWidget):
         self.window_height = int(screen.height() * 0.75)
         self.resize(self.window_width, self.window_height)
 
-    def open_image(self):
-        file_name, _ = QFileDialog.getOpenFileName(
-            self, "Open Image File", "", "Images (*.png *.xpm *.jpg *.jpeg *.bmp)"
+    def open_images(self):
+        file_names, _ = QFileDialog.getOpenFileNames(
+            self, "Open Image Files", "", "Images (*.png *.xpm *.jpg *.jpeg *.bmp)"
         )
-        if file_name:
-            self.process_image(file_name)
+        if file_names:
+            self.annotated_images.clear()
+            self.text_box.clear()
+            # Remove old QLabel widgets from grid
+            for label in self.image_labels:
+                self.grid_layout.removeWidget(label)
+                label.deleteLater()
+            self.image_labels.clear()
+
+            all_dimensions = []
+            all_summaries = []
+            for idx, file_name in enumerate(file_names):
+                annotated_img, dimensions, summary = self.process_image(file_name)
+                if annotated_img is not None:
+                    self.annotated_images.append(annotated_img)
+                    all_dimensions.extend(dimensions)
+                    all_summaries.append(f"Image {idx+1}: {summary.strip()}")
+            self.display_images(self.annotated_images)
+            self.text_box.append("\n".join(all_dimensions))
+            self.text_box.append("\n".join(all_summaries))
 
     def save_image(self):
-        if self.annotated_image is not None:
+        if self.annotated_images:
             filename, _ = QFileDialog.getSaveFileName(
                 self, "Save Image", "", "PNG Files (*.png);;JPEG Files (*.jpg)"
             )
             if filename:
-                cv2.imwrite(filename, self.annotated_image)
+                # Save the last annotated image
+                cv2.imwrite(filename, self.annotated_images[-1])
         else:
             self.text_box.append("No image to save.")
 
     def process_image(self, file_name):
         image = cv2.imread(file_name)
         if image is None:
-            print("Error: Could not open image.")
-            return
+            print(f"Error: Could not open image {file_name}.")
+            return None, [], ""
 
         # rotate 90 degrees anticlockwise
         image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        """ lower_blue = np.array([100, 150, 180])
-        upper_blue = np.array([114, 255, 255]) """  
 
         lower_blue = np.array([90, 200, 180])
-        upper_blue = np.array([130, 255, 255])   # upper H: 120 to 150
+        upper_blue = np.array([130, 255, 255])
 
-        """ lower_blue = np.array([90, 30, 180])    np.array([H,S,V])
-        Hue(H)	        =100	The color type (blue hues start ~90)	            0 to 179
-        Saturation(S)	=150	Color intensity or purity (higher is more vivid)	0 to 255
-        Value(V)	    =180	Brightness level (0 = black, 255 = full bright)	    0 to 255
-
-        """
         mask = cv2.inRange(hsv, lower_blue, upper_blue)
 
         kernel = np.ones((5, 5), np.uint8)
@@ -105,14 +122,14 @@ class ImageProcessor(QWidget):
 
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area > 20000: #500
+            if area > 20000:
                 x, y, w, h = cv2.boundingRect(cnt)
                 cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
                 label_text = f"Object #{object_index}"
 
                 # Centered top label text
-                font_scale = 1.5  # ~25px font
+                font_scale = 1.5
                 thickness = 2
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 text_size, _ = cv2.getTextSize(label_text, font, font_scale, thickness)
@@ -143,41 +160,38 @@ class ImageProcessor(QWidget):
 
                 object_index += 1
 
-        self.annotated_image = image.copy()
-        self.display_image(image)
-
         total_objects = count_large + count_medium + count_small
-        summary = (f"\nTotal Objects: {total_objects}\n"
-                   f"Large Objects: {count_large}\n"
-                   f"Medium Objects: {count_medium}\n"
-                   f"Small Objects: {count_small}\n")
+        summary = (f"Total Objects: {total_objects} | "
+                   f"Large: {count_large} | Medium: {count_medium} | Small: {count_small}")
 
-        self.text_box.clear()
-        self.text_box.append("\n".join(dimensions))
-        self.text_box.append(summary)
+        return image.copy(), dimensions, summary
 
-        for d in dimensions:
-            print(d)
-        print(summary)
+    def display_images(self, images):
+        # Remove old QLabel widgets from grid
+        for label in self.image_labels:
+            self.grid_layout.removeWidget(label)
+            label.deleteLater()
+        self.image_labels.clear()
 
-    def display_image(self, image):
-        height, width, channel = image.shape
-        bytes_per_line = 3 * width
-        q_image = QImage(image.data, width, height, bytes_per_line, QImage.Format.Format_BGR888)
-        pixmap = QPixmap.fromImage(q_image)
-
-        # Check if image is larger than window size
-        max_width = self.window_width - 40  # account for layout margins
-        max_height = self.window_height - 200  # account for buttons and text box
-
-        if width > max_width or height > max_height:
-            pixmap = pixmap.scaled(
-                max_width, max_height, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
-            )
-
-        self.image_label.setPixmap(pixmap)
-        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
+        # Display images as thumbnails in a grid
+        max_width = self.window_width // 3 - 30
+        max_height = self.window_height // 3 - 30
+        cols = 3
+        for idx, img in enumerate(images):
+            height, width, channel = img.shape
+            bytes_per_line = 3 * width
+            q_image = QImage(img.data, width, height, bytes_per_line, QImage.Format.Format_BGR888)
+            pixmap = QPixmap.fromImage(q_image)
+            if width > max_width or height > max_height:
+                pixmap = pixmap.scaled(
+                    max_width, max_height, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
+                )
+            label = QLabel()
+            label.setPixmap(pixmap)
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            self.grid_layout.addWidget(label, idx // cols, idx % cols)
+            self.image_labels.append(label)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
