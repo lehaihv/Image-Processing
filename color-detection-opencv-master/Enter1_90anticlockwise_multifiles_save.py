@@ -185,7 +185,7 @@ class ImageProcessor(QWidget):
 
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area > 20000:  # Adjusted threshold for larger objects 350000
+            if area > 50000:  # Adjusted threshold for larger objects 350000
                 x, y, w, h = cv2.boundingRect(cnt)
                 cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
