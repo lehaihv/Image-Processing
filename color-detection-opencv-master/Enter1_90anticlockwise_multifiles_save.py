@@ -146,7 +146,8 @@ class ImageProcessor(QWidget):
         for img_idx, obj_idx, intensity in self.light_intensity_data:
             x_labels.append(f"Img{img_idx}-Obj{obj_idx}")
             y_values.append(intensity)
-        plt.figure(figsize=(max(6, len(x_labels)//2), 5))
+        # Set plot size to match main window size (in inches, assuming 100 dpi)
+        plt.figure(figsize=(self.window_width / 100, self.window_height / 100))
         plt.plot(x_labels, y_values, marker='o', color='blue')
         plt.xlabel("Detected Object")
         plt.ylabel("Light Intensity")
