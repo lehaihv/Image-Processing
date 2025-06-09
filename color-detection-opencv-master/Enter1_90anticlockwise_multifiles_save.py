@@ -100,7 +100,7 @@ class ImageProcessor(QWidget):
             self.text_box.append("\n".join(all_summaries))
 
     def save_image(self):
-        # Save the current scroll area (all images as a subplot) as an image
+        # Save the entire grid of images (all subplots), not just the visible part
         if self.annotated_images:
             filename, selected_filter = QFileDialog.getSaveFileName(
                 self, "Save Image", "", "PNG Files (*.png);;JPEG Files (*.jpg)"
@@ -112,8 +112,8 @@ class ImageProcessor(QWidget):
                         filename += ".png"
                     else:
                         filename += ".jpg"
-                # Grab the scroll area as a pixmap
-                pixmap = self.scroll_area.grab()
+                # Grab the entire scroll_widget (the full grid), not just the visible area
+                pixmap = self.scroll_widget.grab()
                 pixmap.save(filename)
                 self.text_box.append(f"Saved subplot image to {filename}")
         else:
@@ -186,7 +186,7 @@ class ImageProcessor(QWidget):
 
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area > 50000:  # Adjusted threshold for larger objects 350000
+            if area > 50000:  # Adjusted threshold for larger objects 350000 //1000-small
                 x, y, w, h = cv2.boundingRect(cnt)
                 cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
