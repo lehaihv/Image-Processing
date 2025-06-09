@@ -149,7 +149,7 @@ txt11 = string(v2(1,1)) + " " + string(v2(1,2)) + " " + string(v2(1,3));
 %disp(string(v1))
 % value = [v1 v2];
 value = [txt10 txt11];
-RGB = insertText(rgbImage,position,value,FontSize=rows/20,AnchorPoint="LeftBottom");
+RGB = insertText(rgbImage,position,value,FontSize=30,AnchorPoint="LeftBottom");
 figure
 imshow(RGB)
 title("Board")

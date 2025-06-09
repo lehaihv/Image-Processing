@@ -62,7 +62,7 @@ valueMaskred1 = (vImage1 >= valueTL1) & (vImage1 <= valueTH1);
 binaryImage = hueMaskred1 & saturationMaskred1 & valueMaskred1;
 
 %Take largest blobs only
-binaryImage = bwareaopen(binaryImage, 1000);
+binaryImage = bwareaopen(binaryImage, 1000); %smallest size of object
 
 props = regionprops(binaryImage, 'Area');
 allAreas = sort([props.Area], 'descend')
@@ -77,7 +77,14 @@ num_objs = size(props,1);
 disp("No of Objects");
 disp(num_objs);
 
+if num_objs < 1
+    message = sprintf('There is no blue object in the image \n%s', fullImageFileName);
+	uiwait(msgbox(message));
+	return;    
+end
+
 arr_temp = [];
+%arr_temp = zeros(1, num_objs);
 for i=1:2
     for j=1:num_objs
         arr_temp = [arr_temp, centroids(j,i)];    %centroids(j,i)
@@ -110,13 +117,14 @@ end
 
 disp(size(value));
 disp(value);
+%fontSize = 1000;
 
 % fontSize = int32(rows/40);
 % if fontSize < 15
 %     fontSize = 25;
 % end    
     
-RGB = insertText(rgbImage,pos,value,AnchorPoint="LeftBottom"); %FontSize=fontSize,
+RGB = insertText(rgbImage,pos,value,FontSize=50,AnchorPoint="CenterTop"); %FontSize=fontSize,
 figure
 imshow(RGB)
 title("Enterolert Test Results")
