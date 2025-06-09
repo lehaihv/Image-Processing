@@ -1,0 +1,22 @@
+window3 = cv2.namedWindow("w3")
+cv2.imshow(window3, image)
+cv2.waitKey(8000)
+cv2.destroyWindows(window3) 
+---> show image in window3 for 8s then auto close and delete window3
+
+window3 = cv2.namedWindow("w3")
+cv2.imshow(window3, image)
+cv2.waitKey(0)
+cv2.destroyWindows(window3) 
+---> show image in window3 forever until any keypress then auto close and delete window3
+
+dis = True
+while dis:
+    cv2.imshow(window3, image)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):  // 27 if want use "Esc" key to exit
+        dis = False
+
+cv2.destroyWindows(window3)
+cv2.destroyAllWindows()
+---> show image in window3 forever until keypress of "q" was pressed then auto close and delete window3
