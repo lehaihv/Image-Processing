@@ -172,7 +172,7 @@ class ImageProcessor(QWidget):
         plt.xticks(rotation=45, ha='right')
         plt.legend()
         plt.tight_layout()
-        plt.show()
+        plt.show(block=False)
 
         # Plot 2: Average HSV
         plt.figure(figsize=(self.window_width / 100, self.window_height / 100))
@@ -185,7 +185,7 @@ class ImageProcessor(QWidget):
         plt.xticks(rotation=45, ha='right')
         plt.legend()
         plt.tight_layout()
-        plt.show()
+        plt.show(block=False)
 
         # Plot 3: Average RGB
         plt.figure(figsize=(self.window_width / 100, self.window_height / 100))
@@ -198,7 +198,7 @@ class ImageProcessor(QWidget):
         plt.xticks(rotation=45, ha='right')
         plt.legend()
         plt.tight_layout()
-        plt.show()
+        plt.show(block=False)
 
     def process_image(self, file_name, image_idx):
         image = cv2.imread(file_name)
