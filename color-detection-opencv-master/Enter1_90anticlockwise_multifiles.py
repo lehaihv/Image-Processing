@@ -100,7 +100,7 @@ class ImageProcessor(QWidget):
             return None, [], ""
 
         # rotate 90 degrees anticlockwise
-        image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        # image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
         lower_blue = np.array([90, 200, 180])
