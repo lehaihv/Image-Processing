@@ -28,7 +28,7 @@ class ImageProcessor(QWidget):
         self.input_image_dir = ""  # Store directory of first input image
 
         # ---- Set your fixed ROI here (x, y, w, h) ----
-        self.fixed_roi = (180, 1070, 815, 460)  # Example: top-left (100,100), width=200, height=200
+        self.fixed_roi = (410, 730, 810, 420)  # Example: top-left (100,100), width=200, height=200
         # ----------------------------------------------
 
         # Set button widths
@@ -209,7 +209,7 @@ class ImageProcessor(QWidget):
             return None, [], "", []
 
         # rotate 90 degrees anticlockwise
-        image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        # image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
         # Use the fixed ROI set in __init__
