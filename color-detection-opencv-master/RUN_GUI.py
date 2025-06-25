@@ -9,6 +9,8 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QImage, QPixmap
 from PyQt6.QtCore import Qt
+import matplotlib
+matplotlib.use('QtAgg')
 import matplotlib.pyplot as plt
 from statsmodels.nonparametric.smoothers_lowess import lowess
 
@@ -235,6 +237,7 @@ class ImageProcessor(QWidget):
 
         plt.tight_layout()
         plt.show(block=False)
+        plt.pause(0.1)
 
         # Plot 2: Average RGB
         plt.figure(figsize=(12, 8))
@@ -303,6 +306,7 @@ class ImageProcessor(QWidget):
 
         plt.tight_layout()
         plt.show(block=False)
+        plt.pause(0.1)
 
         # Plot 3: Average HSV
         """ plt.figure(figsize=(12, 8))

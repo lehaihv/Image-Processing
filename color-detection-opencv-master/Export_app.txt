@@ -1,0 +1,27 @@
+How to export your PyQt (and OpenCV/matplotlib) app as a standalone executable (no Python needed):
+
+1. Install PyInstaller:
+   pip install pyinstaller
+
+2. Package your app:
+   cd /path/to/your/project
+   pyinstaller --noconfirm --onefile --windowed RUN_GUI.py
+   - --onefile: single executable
+   - --windowed: no terminal window (for GUI apps)
+
+3. Find your executable in the dist folder:
+   dist/RUN_GUI   (or RUN_GUI.exe on Windows)
+
+4. Distribute:
+   Share the file in dist/. No Python installation needed for users.
+
+Notes:
+- If you use images, config files, or other resources, add them with --add-data:
+  pyinstaller --noconfirm --onefile --windowed --add-data "myicon.png:." RUN_GUI.py
+- On Linux, build on the oldest system you want to support for best compatibility.
+- For Windows, build on Windows; for Linux, build on Linux.
+
+Summary:
+- Use PyInstaller to create a standalone app.
+- Distribute the file in dist/.
+- No Python installation is needed for end users.
