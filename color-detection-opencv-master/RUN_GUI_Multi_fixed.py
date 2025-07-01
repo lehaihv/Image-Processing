@@ -356,7 +356,7 @@ class ImageProcessor(QWidget):
             (int(img_w * 0.9) - roi_w, int(img_h * 0.25), roi_w, roi_h),       # Right
         ] """
         self.rois = [
-            (30, 440, 275, 150),
+            (30, 440, 275, 150),#
             (374, 441, 275, 150),
             (712, 443, 275, 150)
             #(712, 443, 75, 50)

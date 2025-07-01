@@ -384,6 +384,11 @@ class ImageProcessor(QWidget):
 
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
+        # Fixed ROI selection for the first image
+        #self.roi = (30, 440, 275, 150)      # Uncomment to use fixed ROI 1
+        #self.roi = (374, 441, 275, 150)    # Uncomment to use fixed ROI 2       
+        #self.roi = (712, 443, 275, 150)    # Uncomment to use fixed ROI 3
+
         if self.roi is None:
             gui_w, gui_h = self.window_width, self.window_height
             img_h, img_w = image.shape[:2]
