@@ -83,6 +83,32 @@ class ImageProcessor(QWidget):
 
             all_dimensions = []
             all_summaries = []
+
+            # Step 1: Select ROI on the last image
+            last_image_path = file_names[-1]
+            image = cv2.imread(last_image_path)
+            if image is None:
+                self.text_box.append(f"Could not load last image: {last_image_path}")
+                return
+
+            gui_w, gui_h = self.window_width, self.window_height
+            img_h, img_w = image.shape[:2]
+            scale_w = gui_w / img_w
+            scale_h = gui_h / img_h
+            scale = min(scale_w, scale_h)
+            disp_w, disp_h = int(img_w * scale), int(img_h * scale)
+            image_disp = cv2.resize(image, (disp_w, disp_h), interpolation=cv2.INTER_AREA)
+
+            roi_disp = cv2.selectROI("Select ROI on Last Image", image_disp, showCrosshair=True, fromCenter=False)
+            cv2.destroyWindow("Select ROI on Last Image")
+            if roi_disp == (0, 0, 0, 0):
+                self.text_box.append("No ROI selected.")
+                return
+            x, y, w, h = [int(v / scale) for v in roi_disp]
+            self.roi = (x, y, w, h)
+            self.text_box.append(f"ROI selected from last image: x={x}, y={y}, w={w}, h={h}")
+
+            # Step 2: Process all images using the selected ROI
             for idx, file_name in enumerate(file_names):
                 annotated_img, dimensions, summary, intensities = self.process_image(file_name, idx + 1)
                 if annotated_img is not None:
@@ -90,9 +116,11 @@ class ImageProcessor(QWidget):
                     all_dimensions.extend(dimensions)
                     all_summaries.append(f"Image {idx + 1}: {summary.strip()}")
                     self.light_intensity_data.extend(intensities)
+
             self.display_images(self.annotated_images)
             self.text_box.append("\n".join(all_dimensions))
             self.text_box.append("\n".join(all_summaries))
+
 
     def save_image(self):
         if self.annotated_images:
@@ -388,7 +416,6 @@ class ImageProcessor(QWidget):
         #self.roi = (30, 440, 275, 150)      # Uncomment to use fixed ROI 1
         #self.roi = (374, 441, 275, 150)    # Uncomment to use fixed ROI 2       
         #self.roi = (712, 443, 275, 150)    # Uncomment to use fixed ROI 3
-        #self.roi= (325, 433, 500, 285)
 
         if self.roi is None:
             gui_w, gui_h = self.window_width, self.window_height

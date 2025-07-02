@@ -44,9 +44,6 @@ class ImageProcessor(QWidget):
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.scroll_widget)
         layout.addWidget(self.scroll_area)
-
-        # Set text box height to about 5 lines
-        self.text_box.setFixedHeight(90)  # ~5 lines depending on font size
         layout.addWidget(self.text_box)
 
         button_layout = QHBoxLayout()
@@ -65,7 +62,7 @@ class ImageProcessor(QWidget):
         self.window_height = int(screen.height() * 0.75)
         self.resize(self.window_width, self.window_height)
 
-    def open_images(self):
+    """ def open_images(self):
         file_names, _ = QFileDialog.getOpenFileNames(
             self, "Open Image Files", "", "Images (*.png *.xpm *.jpg *.jpeg *.bmp)"
         )
@@ -93,6 +90,65 @@ class ImageProcessor(QWidget):
             self.display_images(self.annotated_images)
             self.text_box.append("\n".join(all_dimensions))
             self.text_box.append("\n".join(all_summaries))
+ """
+    
+    def open_images(self):
+        file_names, _ = QFileDialog.getOpenFileNames(
+            self, "Open Image Files", "", "Images (*.png *.xpm *.jpg *.jpeg *.bmp)"
+        )
+        if file_names:
+            self.input_image_dir = os.path.dirname(file_names[0])
+            self.annotated_images.clear()
+            self.text_box.clear()
+            self.light_intensity_data.clear()
+            self.roi = None
+
+            for label in self.image_labels:
+                self.grid_layout.removeWidget(label)
+                label.deleteLater()
+            self.image_labels.clear()
+
+            all_dimensions = []
+            all_summaries = []
+
+            # Step 1: Select ROI on the last image
+            last_image_path = file_names[-1]
+            image = cv2.imread(last_image_path)
+            if image is None:
+                self.text_box.append(f"Could not load last image: {last_image_path}")
+                return
+
+            gui_w, gui_h = self.window_width, self.window_height
+            img_h, img_w = image.shape[:2]
+            scale_w = gui_w / img_w
+            scale_h = gui_h / img_h
+            scale = min(scale_w, scale_h)
+            disp_w, disp_h = int(img_w * scale), int(img_h * scale)
+            image_disp = cv2.resize(image, (disp_w, disp_h), interpolation=cv2.INTER_AREA)
+
+            roi_disp = cv2.selectROI("Select ROI on Last Image", image_disp, showCrosshair=True, fromCenter=False)
+            cv2.destroyWindow("Select ROI on Last Image")
+            if roi_disp == (0, 0, 0, 0):
+                self.text_box.append("No ROI selected.")
+                return
+            x, y, w, h = [int(v / scale) for v in roi_disp]
+            self.roi = (x, y, w, h)
+            self.text_box.append(f"ROI selected from last image: x={x}, y={y}, w={w}, h={h}")
+
+            # Step 2: Process all images using the selected ROI
+            for idx, file_name in enumerate(file_names):
+                annotated_img, dimensions, summary, intensities = self.process_image(file_name, idx + 1)
+                if annotated_img is not None:
+                    self.annotated_images.append(annotated_img)
+                    all_dimensions.extend(dimensions)
+                    all_summaries.append(f"Image {idx + 1}: {summary.strip()}")
+                    self.light_intensity_data.extend(intensities)
+
+            self.display_images(self.annotated_images)
+            self.text_box.append("\n".join(all_dimensions))
+            self.text_box.append("\n".join(all_summaries))
+
+
 
     def save_image(self):
         if self.annotated_images:
@@ -170,8 +226,6 @@ class ImageProcessor(QWidget):
             self.text_box.append(f"Saved ROI stats data to {filename}")
 
     def plot_light_intensity(self):
-        small_interval = 20
-        large_interval = 50
         if not self.light_intensity_data:
             self.text_box.append("No ROI stats data to plot.")
             return
@@ -209,7 +263,7 @@ class ImageProcessor(QWidget):
         loess_v = lowess(y_v, np.arange(len(y_v)), frac=0.3)
 
         # Set x-axis limits
-        x_limit = num_rois + small_interval
+        x_limit = num_rois + 20
 
         # Plot 1: Blue Light Intensity
         plt.figure()
@@ -218,7 +272,7 @@ class ImageProcessor(QWidget):
         plt.xlabel("ROI Number")
         plt.ylabel("Blue Intensity")
         plt.title("Blue Light Intensity - Raw Data")
-        plt.xticks(np.arange(0, x_limit, small_interval))
+        plt.xticks(np.arange(0, x_limit, 20))
         plt.xlim(0, x_limit)
         plt.ylim(0, 255)
         plt.legend()
@@ -229,7 +283,7 @@ class ImageProcessor(QWidget):
         plt.xlabel("ROI Number")
         plt.ylabel("Blue Intensity")
         plt.title("Blue Light Intensity - LOESS Smoothed")
-        plt.xticks(np.arange(0, x_limit, small_interval))
+        plt.xticks(np.arange(0, x_limit, 20))
         plt.xlim(0, x_limit)
         plt.ylim(0, 255)
         plt.legend()
@@ -237,7 +291,6 @@ class ImageProcessor(QWidget):
 
         plt.tight_layout()
         plt.show(block=False)
-        plt.pause(0.1)
 
         # Plot 2: Average RGB
         plt.figure(figsize=(12, 8))
@@ -248,7 +301,7 @@ class ImageProcessor(QWidget):
         plt.xlabel("ROI Number")
         plt.ylabel("Average R")
         plt.title("Raw Avg R")
-        plt.xticks(np.arange(0, x_limit, large_interval))
+        plt.xticks(np.arange(0, x_limit, 50))
         plt.xlim(0, x_limit)
         plt.ylim(0, 255)
         plt.grid()
@@ -258,7 +311,7 @@ class ImageProcessor(QWidget):
         plt.xlabel("ROI Number")
         plt.ylabel("Average G")
         plt.title("Raw Avg G")
-        plt.xticks(np.arange(0, x_limit, large_interval))
+        plt.xticks(np.arange(0, x_limit, 50))
         plt.xlim(0, x_limit)
         plt.ylim(0, 255)
         plt.grid()
@@ -268,7 +321,7 @@ class ImageProcessor(QWidget):
         plt.xlabel("ROI Number")
         plt.ylabel("Average B")
         plt.title("Raw Avg B")
-        plt.xticks(np.arange(0, x_limit, large_interval))
+        plt.xticks(np.arange(0, x_limit, 50))
         plt.xlim(0, x_limit)
         plt.ylim(0, 255)
         plt.grid()
@@ -279,7 +332,7 @@ class ImageProcessor(QWidget):
         plt.xlabel("ROI Number")
         plt.ylabel("Average R")
         plt.title("LOESS Smoothed Avg R")
-        plt.xticks(np.arange(0, x_limit, large_interval))
+        plt.xticks(np.arange(0, x_limit, 50))
         plt.xlim(0, x_limit)
         plt.ylim(0, 255)
         plt.grid()
@@ -289,7 +342,7 @@ class ImageProcessor(QWidget):
         plt.xlabel("ROI Number")
         plt.ylabel("Average G")
         plt.title("LOESS Smoothed Avg G")
-        plt.xticks(np.arange(0, x_limit, large_interval))
+        plt.xticks(np.arange(0, x_limit, 50))
         plt.xlim(0, x_limit)
         plt.ylim(0, 255)
         plt.grid()
@@ -299,17 +352,16 @@ class ImageProcessor(QWidget):
         plt.xlabel("ROI Number")
         plt.ylabel("Average B")
         plt.title("LOESS Smoothed Avg B")
-        plt.xticks(np.arange(0, x_limit, large_interval))
+        plt.xticks(np.arange(0, x_limit, 50))
         plt.xlim(0, x_limit)
         plt.ylim(0, 255)
         plt.grid()
 
         plt.tight_layout()
         plt.show(block=False)
-        plt.pause(0.1)
 
         # Plot 3: Average HSV
-        """ plt.figure(figsize=(12, 8))
+        plt.figure(figsize=(12, 8))
 
         # Raw HSV data
         plt.subplot(2, 3, 1)
@@ -317,7 +369,7 @@ class ImageProcessor(QWidget):
         plt.xlabel("ROI Number")
         plt.ylabel("Average H")
         plt.title("Raw Avg H")
-        plt.xticks(np.arange(0, x_limit, large_interval))
+        plt.xticks(np.arange(0, x_limit, 50))
         plt.xlim(0, x_limit)
         plt.ylim(0, 255)
         plt.grid()
@@ -327,7 +379,7 @@ class ImageProcessor(QWidget):
         plt.xlabel("ROI Number")
         plt.ylabel("Average S")
         plt.title("Raw Avg S")
-        plt.xticks(np.arange(0, x_limit, large_interval))
+        plt.xticks(np.arange(0, x_limit, 50))
         plt.xlim(0, x_limit)
         plt.ylim(0, 255)
         plt.grid()
@@ -337,7 +389,7 @@ class ImageProcessor(QWidget):
         plt.xlabel("ROI Number")
         plt.ylabel("Average V")
         plt.title("Raw Avg V")
-        plt.xticks(np.arange(0, x_limit, large_interval))
+        plt.xticks(np.arange(0, x_limit, 50))
         plt.xlim(0, x_limit)
         plt.ylim(0, 255)
         plt.grid()
@@ -348,7 +400,7 @@ class ImageProcessor(QWidget):
         plt.xlabel("ROI Number")
         plt.ylabel("Average H")
         plt.title("LOESS Smoothed Avg H")
-        plt.xticks(np.arange(0, x_limit, large_interval))
+        plt.xticks(np.arange(0, x_limit, 50))
         plt.xlim(0, x_limit)
         plt.ylim(0, 255)
         plt.grid()
@@ -358,7 +410,7 @@ class ImageProcessor(QWidget):
         plt.xlabel("ROI Number")
         plt.ylabel("Average S")
         plt.title("LOESS Smoothed Avg S")
-        plt.xticks(np.arange(0, x_limit, large_interval))
+        plt.xticks(np.arange(0, x_limit, 50))
         plt.xlim(0, x_limit)
         plt.ylim(0, 255)
         plt.grid()
@@ -368,13 +420,13 @@ class ImageProcessor(QWidget):
         plt.xlabel("ROI Number")
         plt.ylabel("Average V")
         plt.title("LOESS Smoothed Avg V")
-        plt.xticks(np.arange(0, x_limit, large_interval))
+        plt.xticks(np.arange(0, x_limit, 50))
         plt.xlim(0, x_limit)
         plt.ylim(0, 255)
         plt.grid()
 
         plt.tight_layout()
-        plt.show(block=False) """
+        plt.show(block=False)
 
     def process_image(self, file_name, image_idx):
         image = cv2.imread(file_name)
@@ -384,10 +436,10 @@ class ImageProcessor(QWidget):
 
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-        # Fixed ROI selection for the first image
-        #self.roi = (30, 440, 275, 150)      # Uncomment to use fixed ROI 1
-        #self.roi = (374, 441, 275, 150)    # Uncomment to use fixed ROI 2       
-        #self.roi = (712, 443, 275, 150)    # Uncomment to use fixed ROI 3
+        # Fixed ROI selection
+        #self.roi= (30, 440, 275, 150)  # ROI 1
+        #self.roi= (374, 441, 275, 150)  # ROI 2
+        #self.roi= (712, 443, 275, 150)  # ROI 3
         #self.roi= (325, 433, 500, 285)
 
         if self.roi is None:
