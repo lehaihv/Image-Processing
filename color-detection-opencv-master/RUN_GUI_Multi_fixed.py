@@ -279,7 +279,8 @@ class ImageProcessor(QWidget):
         plt.show(block=False)
 
         # --- Average R,G,B: 3x6 subplots for each line ---
-        fig, axs = plt.subplots(3, 6, figsize=(24, 12), sharex=True)
+        # fig, axs = plt.subplots(3, 6, figsize=(24, 12), sharex=True)
+        fig, axs = plt.subplots(3, num_rois * 2, figsize=(4 * num_rois * 2, 12), sharex=True)
         colors = ['red', 'green', 'blue']
         channels = ['R', 'G', 'B']
         for roi_idx in range(num_rois):
